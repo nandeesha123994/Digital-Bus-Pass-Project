@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Rewards Buttons - Instructions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .note {
+            background: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>How to Add Rewards Buttons to Your Dashboards</h1>
+    
+    <div class="step">
+        <h2>Step 1: Create the includes directory</h2>
+        <p>Create a directory named <code>includes</code> in your project root if it doesn't exist already.</p>
+    </div>
+
+    <div class="step">
+        <h2>Step 2: Create rewards-nav.php</h2>
+        <p>Create a new file named <code>rewards-nav.php</code> in the includes directory with this content:</p>
+        <pre><code>&lt;?php
+// Get user's reward points if logged in
+$userPoints = 0;
+$userBadge = "Bronze";
+if (isset($_SESSION["uid"])) {
+    $pointsQuery = "SELECT reward_points FROM users WHERE id = ?";
+    $stmt = $con->prepare($pointsQuery);
+    $stmt->bind_param("i", $_SESSION["uid"]);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        $userPoints = $row["reward_points"];
+        // Determine badge based on points
+        if ($userPoints >= 1000) {
+            $userBadge = "Diamond";
+        } elseif ($userPoints >= 500) {
+            $userBadge = "Platinum";
+        } elseif ($userPoints >= 250) {
+            $userBadge = "Gold";
+        } elseif ($userPoints >= 100) {
+            $userBadge = "Silver";
+        }
+    }
+}
+?&gt;
+
+&lt;!-- User Dashboard Navigation --&gt;
+&lt;?php if (isset($_SESSION["uid"])): ?&gt;
+&lt;div class="nav-item rewards-nav"&gt;
+    &lt;a href="rewards-dashboard.php" class="rewards-link"&gt;
+        &lt;i class="fas fa-star"&gt;&lt;/i&gt;
+        &lt;span class="rewards-text"&gt;My Rewards&lt;/span&gt;
+        &lt;span class="rewards-badge &lt;?php echo strtolower($userBadge); ?&gt;"&gt;
+            &lt;?php echo $userPoints; ?&gt; pts
+        &lt;/span&gt;
+    &lt;/a&gt;
+&lt;/div&gt;
+&lt;?php endif; ?&gt;
+
+&lt;!-- Admin Dashboard Navigation --&gt;
+&lt;?php if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true): ?&gt;
+&lt;div class="nav-item rewards-nav"&gt;
+    &lt;a href="admin-rewards.php" class="rewards-link"&gt;
+        &lt;i class="fas fa-star"&gt;&lt;/i&gt;
+        &lt;span class="rewards-text"&gt;Rewards Management&lt;/span&gt;
+    &lt;/a&gt;
+&lt;/div&gt;
+&lt;?php endif; ?&gt;
+
+&lt;style&gt;
+.rewards-nav {
+    margin: 10px 0;
+}
+
+.rewards-link {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.rewards-link:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.rewards-text {
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+.rewards-badge {
+    margin-left: auto;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.rewards-badge.bronze {
+    background: #cd7f32;
+    color: white;
+}
+
+.rewards-badge.silver {
+    background: #c0c0c0;
+    color: white;
+}
+
+.rewards-badge.gold {
+    background: #ffd700;
+    color: #333;
+}
+
+.rewards-badge.platinum {
+    background: #e5e4e2;
+    color: #333;
+}
+
+.rewards-badge.diamond {
+    background: #b9f2ff;
+    color: #333;
+}
+&lt;/style&gt;</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>Step 3: Add to user-dashboard.php</h2>
+        <p>Find this line in your user-dashboard.php:</p>
+        <pre><code>&lt;a href="apply-pass.php" class="nav-item"&gt;
+    &lt;i class="fas fa-plus-circle"&gt;&lt;/i&gt; Apply for Pass
+&lt;/a&gt;</code></pre>
+        <p>Add this line right after it:</p>
+        <pre><code>&lt;?php include("includes/rewards-nav.php"); ?&gt;</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>Step 4: Add to admin-dashboard.php</h2>
+        <p>Find this line in your admin-dashboard.php:</p>
+        <pre><code>&lt;a href="manage-applications.php" class="nav-item"&gt;
+    &lt;i class="fas fa-file-alt"&gt;&lt;/i&gt; Applications
+&lt;/a&gt;</code></pre>
+        <p>Add this line right after it:</p>
+        <pre><code>&lt;?php include("includes/rewards-nav.php"); ?&gt;</code></pre>
+    </div>
+
+    <div class="note">
+        <h3>Important Notes:</h3>
+        <ul>
+            <li>Make sure you have Font Awesome included in your project for the icons</li>
+            <li>The rewards navigation will only show up for logged-in users</li>
+            <li>Admin users will see the "Rewards Management" link</li>
+            <li>Regular users will see their points and badge level</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>Step 5: Test the Changes</h2>
+        <p>After making these changes:</p>
+        <ol>
+            <li>Log in as a regular user to see the "My Rewards" button with points</li>
+            <li>Log in as an admin to see the "Rewards Management" button</li>
+            <li>Make sure the styling looks correct in both cases</li>
+        </ol>
+    </div>
+</body>
+</html> 
